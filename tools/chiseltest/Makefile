@@ -1,9 +1,12 @@
 
 
-all: generated/ChiselDecoder.sv
+all: ../../src/Tile.HDL/chiseltest_tile/ChiselDecoder.sv
 
-generated/ChiselDecoder.sv:
-	sbt 'run mosaicdemo.ChiselDecoder' && cp $@ ../../src/Tile.HDL/chiseltest_tile/
+generated/ChiselDecoder.sv :  ./src/main/scala/mosaictest/ChiselDecoder.scala
+	sbt 'run mosaicdemo.ChiselDecoder'
+
+../../src/Tile.HDL/chiseltest_tile/ChiselDecoder.sv: generated/ChiselDecoder.sv
+	cp $< ../../src/Tile.HDL/chiseltest_tile/
 
 test:
 	sbt test

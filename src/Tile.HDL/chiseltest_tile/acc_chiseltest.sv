@@ -59,9 +59,6 @@ noc_buffer_in noc_buffer(
 );
 
    // Decode NoC header
-
-   assign mem_rdata_axi = 'h0;
-
    logic		stream_in_TREADY_tmp;
 
    logic	    stream_out_TVALID_tmp;
@@ -70,24 +67,28 @@ noc_buffer_in noc_buffer(
    logic		stream_out_TLAST_tmp;
    logic		stream_out_TREADY_tmp;
 
-   ChiselDecoder ChiselDecoder_inst (
-						  .clock(clk_line),
-						  .reset(~clk_line_rst_low),
-						  .io_HsrcId(HsrcId),
-						  .io_stream_in_TVALID(stream_in_TVALID_int),
-						  .io_stream_in_TDATA(stream_in_TDATA_int),
-						  .io_stream_in_TKEEP(stream_in_TKEEP_int),
-						  .io_stream_in_TLAST(stream_in_TLAST_int),
-						  .io_stream_in_TREADY(stream_in_TREADY_tmp),
-						  .io_stream_out_TVALID(stream_out_TVALID_tmp),
-						  .io_stream_out_TDATA(stream_out_TDATA_tmp),
-						  .io_stream_out_TKEEP(stream_out_TKEEP_tmp),
-						  .io_stream_out_TLAST(stream_out_TLAST_tmp),
-						  .io_stream_out_TREADY(stream_out_TREADY)
-						  );
+   ChiselDecoder ChiselDecoder_inst
+	 (
+	  .clock(clk_line),
+	  .reset(~clk_line_rst_low),
+	  .io_HsrcId(HsrcId),
+	  .io_stream_in_TVALID(stream_in_TVALID_int),
+	  .io_stream_in_TDATA(stream_in_TDATA_int),
+	  .io_stream_in_TKEEP(stream_in_TKEEP_int),
+	  .io_stream_in_TLAST(stream_in_TLAST_int),
+	  .io_stream_in_TREADY(stream_in_TREADY_tmp),
+	  .io_stream_out_TVALID(stream_out_TVALID_tmp),
+	  .io_stream_out_TDATA(stream_out_TDATA_tmp),
+	  .io_stream_out_TKEEP(stream_out_TKEEP_tmp),
+	  .io_stream_out_TLAST(stream_out_TLAST_tmp),
+	  .io_stream_out_TREADY(stream_out_TREADY),
+	  .io_mem_valid_axi(mem_valid_axi),
+	  .io_mem_wstrb_axi(mem_wstrb_axi),
+	  .io_mem_addr_axi(mem_addr_axi),
+	  .io_mem_wdata_axi(mem_wdata_axi),
+	  .io_mem_rdata_axi(mem_rdata_axi) );
 
    assign stream_in_TREADY_int = stream_in_TREADY_tmp;
-
    assign stream_out_TVALID = stream_out_TVALID_tmp;
    assign stream_out_TDATA  = stream_out_TDATA_tmp;
    assign stream_out_TKEEP  = stream_out_TKEEP_tmp;

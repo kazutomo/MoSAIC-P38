@@ -52,10 +52,11 @@ chomp($path);
 print "INFO: Current directory: $path\n";
 $fw_path = "$path/../picorv_c/c_chiseltest";
 $param{'firmware_path'} = $fw_path;
-@pico_program  = ('chiseltest32.hex', '');
+#                  pico                chiseltest
+@pico_program  = ('chiseltest32.hex', 'dummy32.hex');
 
 #- Simulation Time
-$param{'sim_loop'}     = 100;
+$param{'sim_loop'}     = 80;
 
 #- Checkers
 @checkers = ('check_pico_chiseltest.sh');
@@ -64,12 +65,12 @@ $param{'sim_loop'}     = 100;
 $param{'run_sim'} = 1;
 
 ###########################################
-#- Generate: Do not modify  
+#- Generate: Do not modify
 ###########################################
 
 $param{'checkers'} = \@checkers;
 $param{'testcase'} = $0;
 $param{'tile_array'} = \@tile_array;
-$param{'pico_program'} = \@pico_program; 
+$param{'pico_program'} = \@pico_program;
 
 gen_all(\%param);

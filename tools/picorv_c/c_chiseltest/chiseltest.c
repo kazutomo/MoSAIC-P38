@@ -1,8 +1,8 @@
 /* ////////////////////////////////////////////////////////////////
-// Author      : 
-// Date        : 
+// Author      :
+// Date        :
 // Description : Chisel acc test
-// File        : 
+// File        :
 // Notes       :
 // ///////////////////////////////////////////////////////////////*/
 
@@ -31,8 +31,10 @@ uint32_t main (int argc, char *argv[])
    volatile uint32_t c2_h;
    volatile uint32_t c2_l;
 
-  static volatile char debugbuf[32] =
+  static volatile char debugbuf[40] =
 	{0xad, 0xba, 0xde, 0xc0,   // c0debaad
+	 0x00, 0x00, 0x00, 0x00,
+	 0x00, 0x00, 0x00, 0x00,
 	 0x00, 0x00, 0x00, 0x00,
 	 0x00, 0x00, 0x00, 0x00,
 	 0x00, 0x00, 0x00, 0x00,
@@ -63,22 +65,24 @@ uint32_t main (int argc, char *argv[])
   int dbptr_offset = 1;
   int dest_tile_id = 1; // 2x1, row 1, col 0
 
-  unsigned int testpats[3] = {
-	0x22222222,
-	0x11111111,
-	0xffffffff
+  unsigned int testpats[4] = {
+	0xfe3f5555,
+	0xfe3f5554,
+	0xfe3f5553,
+	0xfe3f5552,
   };
 
-  for(int i=0 ; i<3; i++) {
-	if (local_tile_id == 0) {
+  if (local_tile_id == 0) {
+	for(int i=0 ; i<4; i++) {
 	  qPut(dest_tile_id, testpats[i]);
 	  qWait(0, temp);
 	  loopback = 0xdeaddead;
 	  qGet(0, loopback);
-	  dbptr[dbptr_offset++] = loopback; // header?
+	  dbptr[dbptr_offset++] = loopback; // header
 	  qGet(0, loopback);
 	  dbptr[dbptr_offset++] = loopback; // payload
 	}
   }
+
   return 1;
 }

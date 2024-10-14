@@ -22,14 +22,14 @@ class ChiselDecoderSpec extends CommonSpecConfig {
     def waitInTREADY(): Unit = {
       var nclks = 0
       breakable {
-        for (i <- 0 until timeoutclks) {
+        for (i <- 0 to timeoutclks) {
           val complete = dut.io.stream_in_TREADY.peek().litValue
           // println(s"complete=${complete}")
           if (complete != 0) {
-            nclks = i
             break()
           }
           dut.clock.step()
+          nclks = i
         }
       }
       assert(nclks < timeoutclks, "Timeoutwaiting for in_TREADY")
@@ -38,14 +38,14 @@ class ChiselDecoderSpec extends CommonSpecConfig {
     def waitOutTVALID(): Unit = {
       var nclks = 0
       breakable {
-        for (i <- 0 until timeoutclks) {
+        for (i <- 0 to timeoutclks) {
           val complete = dut.io.stream_out_TVALID.peek().litValue
           // println(s"complete=${complete}")
           if (complete != 0) {
-            nclks = i
             break()
           }
           dut.clock.step()
+          nclks = i
         }
       }
       assert(nclks < timeoutclks, "Timeoutwaiting for out_TVALID")
@@ -63,11 +63,26 @@ class ChiselDecoderSpec extends CommonSpecConfig {
       dut.clock.step(1)
 
       dut.io.stream_in_TVALID.poke(true.B)
-      dut.io.stream_in_TDATA.poke(payload) // payload
+      dut.io.stream_in_TDATA.poke(payload)
       dut.io.stream_in_TLAST.poke(true.B)
       dut.clock.step(1)
+
+      dut.io.stream_in_TVALID.poke(false.B)
     }
 
+    def receiveHeader(expectedHeader: Option[Long] = None): Unit = {
+      // receive header
+      dut.io.stream_in_TVALID.poke(false.B)
+      dut.io.stream_out_TREADY.poke(true.B)
+      waitOutTVALID()
+      expectedHeader match {
+        case Some(value) => dut.io.stream_out_TDATA.expect(value)
+        case None =>
+      }
+      // println(s"${dut.io.stream_out_TDATA.peekInt()}")
+      dut.clock.step()
+      dut.io.stream_out_TREADY.poke(false.B)
+    }
     def receiveHeaderPayload(expectedHeader: Option[Long] = None,
                              expectedPayload: Option[Long] = None): Unit = {
       // receive header
@@ -100,17 +115,24 @@ class ChiselDecoderSpec extends CommonSpecConfig {
     }
   }
 
+  def mkHeader(srcY: Int, srcX: Int, dstX: Int, dstY: Int): Long = {
+    ((srcY << 21) | (srcX << 18) | (dstY << 3) | dstX).toLong
+  }
+
+  def startAndWait(op: ChiselDecoderHelper, timeoutclks : Int = 100) : Unit = {
+    val cmd: Long = 0xfc000000L | (1<<25) | (63<<16) | 0x5555
+    op.sendHeaderPayload(mkHeader(4,3,2,1), cmd)
+    op.receiveHeaderPayload()
+  }
+
   "Send and receive a packet" should "pass" in {
     val flags = Seq(WriteVcdAnnotation)
-    test(new ChiselDecoder(debug = true))  .withAnnotations(flags)   { dut =>
-      val bsinout = List((0x0L, 0x0L), (0xFFFFFFFFL, 0xFFFFFFFFL), (0x22222222L, 0x0000ff00L))
+    val timeoutclks = 200
+    test(new ChiselDecoder(debugprint = true))  .withAnnotations(flags)   { dut =>
+      val op = new ChiselDecoderHelper(dut, timeoutclks)
 
-      val op = new ChiselDecoderHelper(dut, timeoutclks = 100)
-
-      bsinout.foreach { case (i, o) =>
-        op.sendHeaderPayload(0x12345678L, i)
-        op.receiveHeaderPayload(expectedPayload = Some(o))
-      }
+      startAndWait(op, timeoutclks)
+      startAndWait(op, timeoutclks)
     }
   }
 }

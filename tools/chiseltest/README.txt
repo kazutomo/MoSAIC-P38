@@ -15,6 +15,18 @@ To run unit test:
 $ make test
 
 
-Note: for a quick demo purpose, we do not use the Maven standard
-director layout like 'src/main/scala'.
+[Director structure]
 
+src/
+├── main
+│   └── scala
+│       ├── common
+│       │   └── GenVerilog.scala
+│       └── mosaictest
+│           └── ChiselDecoder.scala      <- main module
+└── test
+    └── scala
+        ├── common
+        │   └── CommonSpecConfig.scala
+        └── mosaictest
+            └── ChiselDecoderSpec.scala  <- test bench

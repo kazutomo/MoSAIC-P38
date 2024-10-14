@@ -1,0 +1,45 @@
+# SBT-specific files
+target/
+project/target/
+project/project/
+
+# IntelliJ IDEA project files
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Scala Worksheet
+*.worksheet.sc
+
+# IntelliJ IDEA plugin-specific caches and logs
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+.idea/**/contentModel.xml
+.idea/**/modules.xml
+.idea/**/compiler.xml
+.idea/**/misc.xml
+.idea/**/assetWizard.xml
+.idea/**/runConfigurations/
+
+# JARs and compiled classes
+*.class
+*.jar
+*.war
+*.ear
+
+# Log files
+*.log
+
+# Generated files by operating systems or IDEs
+.DS_Store
+Thumbs.db
+*.s
+
+*~
+.bsp
+generated
+project
