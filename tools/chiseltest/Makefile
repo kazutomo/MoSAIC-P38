@@ -1,11 +1,11 @@
 
 
-all: ../../src/Tile.HDL/chiseltest_tile/ChiselDecoder.sv
+all: ../../src/Tile.HDL/chiseltest_tile/NoCDecoderR2.sv
 
-generated/ChiselDecoder.sv :  ./src/main/scala/mosaictest/ChiselDecoder.scala
-	sbt 'run mosaicdemo.ChiselDecoder'
+generated/NoCDecoderR2.sv :  ./src/main/scala/mosaictest/NoCDecoderR2.scala
+	sbt 'run mosaicdemo.NoCDecoderR2'
 
-../../src/Tile.HDL/chiseltest_tile/ChiselDecoder.sv: generated/ChiselDecoder.sv
+../../src/Tile.HDL/chiseltest_tile/NoCDecoderR2.sv: generated/NoCDecoderR2.sv
 	cp $< ../../src/Tile.HDL/chiseltest_tile/
 
 test:

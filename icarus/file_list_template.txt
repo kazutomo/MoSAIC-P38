@@ -58,7 +58,7 @@
 ../src/Tile.HDL/scratchpad_tile/Tile_scratchpad.sv
 ../src/Tile.HDL/loop_tile/acc_loop.sv
 ../src/Tile.HDL/loop_tile/Tile_loop.sv
-../src/Tile.HDL/chiseltest_tile/ChiselDecoder.sv
+../src/Tile.HDL/chiseltest_tile/NoCDecoderR2.sv
 ../src/Tile.HDL/chiseltest_tile/acc_chiseltest.sv
 ../src/Tile.HDL/chiseltest_tile/Tile_chiseltest.sv
 ../src/mosaic.sv

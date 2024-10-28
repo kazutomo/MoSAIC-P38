@@ -10,78 +10,83 @@
 #include <stdlib.h>
 #include <string.h>
 
-uint32_t bit_shuffle(uint32_t input) {
-    uint32_t output = 0;
-    for (int bit_pos = 0; bit_pos < 4; ++bit_pos) {
-        uint32_t mask = 0x11111111 << bit_pos;
-        uint32_t extracted_bits = input & mask;
-        uint32_t gathered_bits = 0;
-        for (int block = 0; block < 8; ++block) {
-            gathered_bits |= ((extracted_bits >> (block * 4 + bit_pos)) & 1) << block;
-        }
-        output |= gathered_bits << (bit_pos * 8);
-    }
-    return output;
+#define CMD_INVALID     0
+#define CMD_LAUNCH      0x20000000
+#define CMD_ISCOMPLETED 0x40000000
+#define CMD_REG_RD      0x60000000
+#define CMD_REG_WR      0x80000000
+#define CMD_MEM_RD      0xa0000000
+#define CMD_MEM_WR      0xc0000000
+#define CMD_DUMMY       0xe0000000
+
+static uint32_t mkR2Packet(uint32_t cmd, uint32_t addr, uint32_t data) {
+  uint32_t ret;
+  ret = cmd | addr << 16 | data;
+  return ret;
+}
+
+static volatile char debugbuf[40] =
+  {0xad, 0xba, 0xde, 0xc0,   // c0debaad
+   0x00, 0x00, 0x00, 0x00,
+   0x00, 0x00, 0x00, 0x00,
+   0x00, 0x00, 0x00, 0x00,
+   0x00, 0x00, 0x00, 0x00,
+   0x00, 0x00, 0x00, 0x00,
+   0x00, 0x00, 0x00, 0x00,
+   0x00, 0x00, 0x00, 0x00,
+   0x00, 0x00, 0x00, 0x00,
+   0xef, 0xbe, 0xad, 0xde};  // deadbeef
+
+volatile uint32_t *dbptr = (uint32_t*)debugbuf;
+static int dbptr_offset = 1;
+
+static const int dest_tile_id = 1; // 2x1, row 1, col 0
+
+static void R2dummy()
+{
+  uint32_t temp, loopback;
+  qPut(dest_tile_id, mkR2Packet(CMD_DUMMY, 0x0, 0x0));
+  qGet(0, loopback);
+  qGet(0, loopback);
+}
+
+static void R2launch()
+{
+  uint32_t temp, loopback;
+
+  for (int i=0 ; i < 2 ; i++) R2dummy();
+
+  qPut(dest_tile_id, mkR2Packet(CMD_LAUNCH, 0x0, 0x1234));
+  qWait(0, temp);
+  qGet(0, loopback);
+  dbptr[dbptr_offset++] = loopback; // header
+  qGet(0, loopback);
+  dbptr[dbptr_offset++] = loopback; // payload
+}
+
+static int R2iscompleted()
+{
+  uint32_t temp, loopback;
+
+  qPut(dest_tile_id, mkR2Packet(CMD_ISCOMPLETED, 0x0, 0x2345));
+  qWait(0, temp);
+  qGet(0, loopback); // header
+  qGet(0, loopback); // payload
+  return loopback & 1;
 }
 
 uint32_t main (int argc, char *argv[])
 {
-   volatile uint32_t c1_h;
-   volatile uint32_t c1_l;
-   volatile uint32_t c2_h;
-   volatile uint32_t c2_l;
-
-  static volatile char debugbuf[40] =
-	{0xad, 0xba, 0xde, 0xc0,   // c0debaad
-	 0x00, 0x00, 0x00, 0x00,
-	 0x00, 0x00, 0x00, 0x00,
-	 0x00, 0x00, 0x00, 0x00,
-	 0x00, 0x00, 0x00, 0x00,
-	 0x00, 0x00, 0x00, 0x00,
-	 0x00, 0x00, 0x00, 0x00,
-	 0x00, 0x00, 0x00, 0x00,
-	 0x00, 0x00, 0x00, 0x00,
-	 0xef, 0xbe, 0xad, 0xde};  // deadbeef
-
-  volatile uint32_t *dbptr = (uint32_t*)debugbuf;
-
-  //- Declare variables
   uint32_t local_tile_id;
-  uint32_t temp, loopback;
-
-#if 0
-  // software bitshuffle performance
-  asm("rdcycleh %0; rdcycle %1;":"=r"(c1_h), "=r"(c1_l):);
-  uint32_t bs_output = bit_shuffle(0x22222222);
-  asm("rdcycleh %0; rdcycle %1;":"=r"(c2_h), "=r"(c2_l):);
-  temp = bs_output;
-  // temp;
-  // c2_l - c1_l;
-  // c2_h - c1_h;
-#endif
+  int i;
 
   local_tile_id = atoi(argv[1]);
 
-  int dbptr_offset = 1;
-  int dest_tile_id = 1; // 2x1, row 1, col 0
-
-  unsigned int testpats[4] = {
-	0xfe3f5555,
-	0xfe3f5554,
-	0xfe3f5553,
-	0xfe3f5552,
-  };
-
   if (local_tile_id == 0) {
-	for(int i=0 ; i<4; i++) {
-	  qPut(dest_tile_id, testpats[i]);
-	  qWait(0, temp);
-	  loopback = 0xdeaddead;
-	  qGet(0, loopback);
-	  dbptr[dbptr_offset++] = loopback; // header
-	  qGet(0, loopback);
-	  dbptr[dbptr_offset++] = loopback; // payload
-	}
+	R2launch();
+	for(i=0; i<100;i++) { if(R2iscompleted()) break; }
+	dbptr[dbptr_offset++] = i;
+	dbptr[dbptr_offset++] = 0xdeaddead;
   }
 
   return 1;

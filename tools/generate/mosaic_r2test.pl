@@ -15,15 +15,15 @@ use POSIX;
 ###########################################
 
 # check files
-my $gensvfn = "../../src/Tile.HDL/chiseltest_tile/ChiselDecoder.sv";
-if (! -e $gensvfn) {
-	my $ret = system("make -C ../chiseltest/");
-	if ($ret != 0 || ! -e $gensvfn) {
-		print("Failed to generate a chiseltest\n");
-		print("Please inspect ../chiseltest");
-		exit(1);
-	}
-}
+# my $gensvfn = "../../src/Tile.HDL/chiseltest_tile/ChiselDecoder.sv";
+# if (! -e $gensvfn) {
+# 	my $ret = system("make -C ../chiseltest/");
+# 	if ($ret != 0 || ! -e $gensvfn) {
+# 		print("Failed to generate a chiseltest\n");
+# 		print("Please inspect ../chiseltest");
+# 		exit(1);
+# 	}
+# }
 
 my $hexfn = "../picorv_c/c_chiseltest/chiseltest32.hex";
 if (! -e $hexfn) {
@@ -56,7 +56,7 @@ $param{'firmware_path'} = $fw_path;
 @pico_program  = ('chiseltest32.hex', 'dummy32.hex');
 
 #- Simulation Time
-$param{'sim_loop'}     = 80;
+$param{'sim_loop'}     = 300;
 
 #- Checkers
 @checkers = ('check_pico_chiseltest.sh');

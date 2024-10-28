@@ -39,7 +39,7 @@ testbench='tb_mosaic'
 rm -rf ${testbench}.vvp ${testbench}.vcd
 
 ###- Verilog simulation
-iverilog -I ../build -c file_list.txt -o ${testbench}.vvp -g2012
+iverilog -D ENABLE_INITIAL_MEM_ -I ../build -c file_list.txt -o ${testbench}.vvp -g2012
 vvp -v ${testbench}.vvp +vcd +trace +noerror
 
 #- Waves up and running

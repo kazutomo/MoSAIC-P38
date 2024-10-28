@@ -67,7 +67,7 @@ noc_buffer_in noc_buffer(
    logic		stream_out_TLAST_tmp;
    logic		stream_out_TREADY_tmp;
 
-   ChiselDecoder ChiselDecoder_inst
+   NoCDecoderR2 NoCDecoderR2_inst
 	 (
 	  .clock(clk_line),
 	  .reset(~clk_line_rst_low),
