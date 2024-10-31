@@ -45,7 +45,7 @@ $param{'r'} = 2;
 $param{'c'} = 1;
 
 @tile_array = (['pico'],
-               ['chiseltest']);
+               ['chiseltest']);   # chiseltest => R2
 
 $path = `pwd`;
 chomp($path);
@@ -56,7 +56,7 @@ $param{'firmware_path'} = $fw_path;
 @pico_program  = ('chiseltest32.hex', 'dummy32.hex');
 
 #- Simulation Time
-$param{'sim_loop'}     = 300;
+$param{'sim_loop'}     = 150;
 
 #- Checkers
 @checkers = ('check_pico_chiseltest.sh');

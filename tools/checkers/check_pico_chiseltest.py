@@ -29,8 +29,8 @@ with open(targetfn) as f:
             counting = True
         elif l.find('deadbeef') != -1:
             # check count
-            if count != 6:
-                print(f'Warning: count should 6, but {count}')
+            if count != 8:
+                print(f'Warning: count should 8, but {count}')
             counting = False
         elif counting == True:
             count += 1

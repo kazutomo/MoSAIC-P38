@@ -50,20 +50,6 @@ static void R2dummy()
   qGet(0, loopback);
 }
 
-static void R2launch()
-{
-  uint32_t temp, loopback;
-
-  for (int i=0 ; i < 2 ; i++) R2dummy();
-
-  qPut(dest_tile_id, mkR2Packet(CMD_LAUNCH, 0x0, 0x1234));
-  qWait(0, temp);
-  qGet(0, loopback);
-  dbptr[dbptr_offset++] = loopback; // header
-  qGet(0, loopback);
-  dbptr[dbptr_offset++] = loopback; // payload
-}
-
 static int R2iscompleted()
 {
   uint32_t temp, loopback;
@@ -75,18 +61,106 @@ static int R2iscompleted()
   return loopback & 1;
 }
 
+static void R2exec(uint32_t entryUip)
+{
+  uint32_t temp, loopback;
+  int i;
+
+  qPut(dest_tile_id, mkR2Packet(CMD_LAUNCH, 0x0, entryUip));
+  qWait(0, temp);
+  qGet(0, loopback);
+  // dbptr[dbptr_offset++] = loopback; // header
+  qGet(0, loopback);
+  // dbptr[dbptr_offset++] = loopback; // payload
+
+  // check completion
+  for(i=0; i<5;i++) { if(R2iscompleted()) break; }
+  dbptr[dbptr_offset++] = 0xc0de0000 | (i+1); // debug
+}
+
+
+static uint32_t R2ReadReg(int regno)
+{
+  uint32_t temp, loopback;
+
+  qPut(dest_tile_id, mkR2Packet(CMD_REG_RD, regno, 0))
+  qWait(0, temp);
+  qGet(0, loopback); // header
+  qGet(0, loopback); // payload
+  return loopback & 0xffff;
+}
+
+static void R2WriteReg(int regno, uint32_t data)
+{
+  uint32_t temp, loopback;
+
+  qPut(dest_tile_id, mkR2Packet(CMD_REG_WR, regno, data))
+  qWait(0, temp);
+  qGet(0, loopback); // header
+  qGet(0, loopback); // payload
+}
+
+static uint32_t R2ReadMem(int addr)
+{
+  uint32_t temp, loopback;
+
+  qPut(dest_tile_id, mkR2Packet(CMD_MEM_RD, addr, 0))
+  qWait(0, temp);
+  qGet(0, loopback); // header
+  qGet(0, loopback); // payload
+  return loopback & 0xffff;
+}
+
+static void R2WriteMem(int addr, uint32_t data)
+{
+  uint32_t temp, loopback;
+
+  qPut(dest_tile_id, mkR2Packet(CMD_MEM_WR, addr, data))
+  qWait(0, temp);
+  qGet(0, loopback); // header
+  qGet(0, loopback); // payload
+}
+
+static void waitR2()
+{
+}
+
 uint32_t main (int argc, char *argv[])
 {
   uint32_t local_tile_id;
   int i;
+  int threshold = 48;
+  int data[] = {22, 50, 81, 4};
+  int ndata = sizeof(data)/sizeof(int);
+  int startaddr = 0;
+  int maxsbp = (ndata+1)*8;
+  int outputaddr = 64;
+  int entryUip = 0x4000;
+  int validated = 1;
 
   local_tile_id = atoi(argv[1]);
 
   if (local_tile_id == 0) {
-	R2launch();
-	for(i=0; i<100;i++) { if(R2iscompleted()) break; }
-	dbptr[dbptr_offset++] = i;
-	dbptr[dbptr_offset++] = 0xdeaddead;
+	// setup operands
+	R2WriteReg( 8, startaddr);
+	R2WriteReg( 9, maxsbp);
+	R2WriteReg(10, outputaddr);
+
+	// copy input data into R2's local memory
+	for (i=0; i<ndata; i++) R2WriteMem(i*8 + startaddr, data[i]);
+
+	R2exec(entryUip);
+
+	// readout the result from R2's local memory
+	for (i=0; i<ndata; i++) {
+	  int res = R2ReadMem(i*8 + outputaddr);
+	  int ref = 0;
+	  if (data[i] >= threshold) ref = data[i]; else ref = 0;
+	  if (res != ref) validated = 0;
+	}
+
+	if(validated) dbptr[dbptr_offset++] = 0xcafe0000; // validated
+	else          dbptr[dbptr_offset++] = 0xbad00000; // failed to validate
   }
 
   return 1;
