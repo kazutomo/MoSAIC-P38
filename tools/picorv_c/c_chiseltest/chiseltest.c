@@ -121,10 +121,6 @@ static void R2WriteMem(int addr, uint32_t data)
   qGet(0, loopback); // payload
 }
 
-static void waitR2()
-{
-}
-
 uint32_t main (int argc, char *argv[])
 {
   uint32_t local_tile_id;
