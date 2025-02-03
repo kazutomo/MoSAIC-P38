@@ -8,6 +8,6 @@ rm -f /home/kazutomo/gitwork/MoSAIC-P38-forked/tools/generate/../../icarus/tile_
 
 ./mosaic_r2filterdense2csr.pl 2>&1 | tee output_r2filterdense2csr.txt
 
-grep MOVRL output_output_r2filterdense2csr.txt
+grep MOVRL output_r2filterdense2csr.txt
 
 
