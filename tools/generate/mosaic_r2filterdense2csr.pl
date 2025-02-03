@@ -56,7 +56,7 @@ $param{'firmware_path'} = $fw_path;
 @pico_program  = ('r2filterdense2csr32.hex', 'dummy32.hex');
 
 #- Simulation Time
-$param{'sim_loop'}     = 400;
+$param{'sim_loop'}     = 500;
 
 #- Checkers
 @checkers = ('check_pico_chiseltest.sh');

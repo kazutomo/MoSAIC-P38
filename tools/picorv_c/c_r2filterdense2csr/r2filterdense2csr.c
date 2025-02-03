@@ -25,9 +25,9 @@ static uint32_t mkR2Packet(uint32_t cmd, uint32_t addr, uint32_t data) {
   return ret;
 }
 
-#define DEBUGBUFSZ (400)
+#define DEBUGBUFSZ (128)
 
-static volatile char debugbuf[DEBUGBUFSZ] = {0xad, 0xba, 0xde, 0xc0};   // c0debaad
+static volatile char debugbuf[DEBUGBUFSZ] __attribute__((aligned(16))) = {0xad, 0xba, 0xde, 0xc0};   // c0debaad
 volatile uint32_t *dbptr = (uint32_t*)debugbuf;
 static int dbptr_offset = 1;
 
@@ -66,7 +66,7 @@ static void R2exec(uint32_t entryUip)
 
   // check completion
   for(i=0; i<5;i++) { if(R2iscompleted()) break; }
-  dbptr[dbptr_offset++] = 0xc0deaaaa | (i+1); // debug
+  //dbptr[dbptr_offset++] = 0xc0de0000 | (i+1); // debug
 }
 
 
@@ -112,15 +112,34 @@ static void R2WriteMem(int addr, uint32_t data)
   qGet(0, loopback); // payload
 }
 
+typedef int val_t;
+void spmv_csr(int n, const int *row_ptr, const int *col_idx, const val_t *values, const val_t *x, val_t *y) {
+  for (int i = 0; i < n; i++) y[i] = 0.0;
+  for (int i = 0; i < n; i++) {
+    for (int j = row_ptr[i]; j < row_ptr[i + 1]; j++) {
+      y[i] += values[j] * x[col_idx[j]];
+    }
+  }
+}
+
+
+#define NCSR (32)
+static int csrdata[NCSR];
+static int csrcol[NCSR];
+static int csrrow[NCSR];
+static int xvec[NCSR];
+static int yvec[NCSR];
+
 uint32_t main (int argc, char *argv[])
 {
   uint32_t local_tile_id;
   int i;
+  int sqmatsz = 3;
   int data[] = {
-	10,  0,  0,
-	2,  10,  0,
-	0,   1, 10};
-  
+	8,   0,  0,
+	2,   8,  0,
+	0,   1,  8};
+
   int ndata = sizeof(data)/sizeof(int);
   int startaddr = 0;
   int maxsbp = (ndata + 2 + 1) * 8; // +2 is header +1 exelusive
@@ -128,7 +147,13 @@ uint32_t main (int argc, char *argv[])
 
   int entryUip = 0x4000;
   int validated = 1;
-  
+
+  for(i=0; i< NCSR; i++) {
+	csrdata[i] = csrcol[i] = csrrow[i] = 0;
+	xvec[i] = i+1;
+	yvec[i] = 0;
+  }
+
   local_tile_id = atoi(argv[1]);
 
   if (local_tile_id == 0) {
@@ -138,19 +163,53 @@ uint32_t main (int argc, char *argv[])
 	R2WriteReg(10, outputaddr);
 
 	// copy input data into R2's local memory
-	for (i=0; i<ndata; i++) R2WriteMem(i*8 + startaddr, data[i]);
+	R2WriteMem(0, 3 * 8); // the size of the csrdata * 8
+	R2WriteMem(8, 3); // ncols
+	for (i=0; i<ndata; i++) R2WriteMem((i+2)*8 + startaddr, data[i]);
 
 	R2exec(entryUip);
 
 	// readout the result from R2's local memory
+	int pos = 0;
+	int nval = 0;
 	for (i=0; i<ndata; i++) {
-	  //int res = R2ReadMem(i*8 + outputaddr);
-	  dbptr[dbptr_offset++] = i;
+	  int res = R2ReadMem((pos*8) + outputaddr);
+	  pos ++;
+	  if (res == 0) {
+		break;
+	  } else {
+		//dbptr[dbptr_offset++] = res;
+		csrdata[i] = res;
+		nval ++;
+	  }
 	}
+	for (i=0; i<ndata; i++) {
+	  int res = R2ReadMem((pos*8) + outputaddr);
+	  pos ++;
+	  if (i>0 && res == 0) {
+		break;
+	  } else {
+		//dbptr[dbptr_offset++] = res;
+		csrcol[i] = res;
+	  }
+	}
+	for (i=0; i<ndata; i++) {
+	  int res = R2ReadMem((pos*8) + outputaddr);
+	  pos ++;
+	  if (i>0 && res == 0) {
+		break;
+	  } else {
+		//dbptr[dbptr_offset++] = res;
+		csrrow[i] = res;
+	  }
+	}
+	//dbptr[dbptr_offset++] = nval;
+	csrrow[i] = nval;
 
-	if(validated) dbptr[dbptr_offset++] = 0xcafe0000; // validated
-	else          dbptr[dbptr_offset++] = 0xbad00000; // failed to validate
-
+	spmv_csr(sqmatsz, csrrow, csrcol, csrdata, xvec, yvec);
+	for(i = 0; i<sqmatsz; i++) {
+	  dbptr[dbptr_offset++] = yvec[i];
+	}
 	dbptr[dbptr_offset++] = 0xdeadbeef;
   }
 

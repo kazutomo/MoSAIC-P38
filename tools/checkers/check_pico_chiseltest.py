@@ -15,7 +15,7 @@ startmarker='c0debaad'
 startmarkernotfound=True
 capturing=False # True after the start marker
 outputbuffer = []
-maxbuflen = 64
+maxbuflen = 32
 
 with open(targetfn) as f:
     while True:

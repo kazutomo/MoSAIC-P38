@@ -62,8 +62,8 @@ $param{'sim_loop'}     = 150;
 @checkers = ('check_pico_chiseltest.sh');
 
 #- Running with Icarus
-$param{'vivado'} = 1;  
-$param{'vivado_project'} = 1;
+#$param{'vivado'} = 1;
+#$param{'vivado_project'} = 1;
 $param{'run_sim'} = 1;
 
 
