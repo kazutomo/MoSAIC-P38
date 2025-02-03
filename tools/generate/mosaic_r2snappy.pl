@@ -25,12 +25,12 @@ use POSIX;
 # 	}
 # }
 
-my $hexfn = "../picorv_c/c_r2filterdense2csr/r2filterdense2csr32.hex";
+my $hexfn = "../picorv_c/c_chiseltest/chiseltest32.hex";
 if (! -e $hexfn) {
-	my $ret = system("make -C ../picorv_c/c_r2filterdense2csr");
+	my $ret = system("make -C ../picorv_c/c_chiseltest");
 	if ($ret != 0 || ! -e $hexfn) {
-		print("Failed to generate a r2filterdense2csr32.hex\n");
-		print("Please inspect ../picorv_c/c_r2filterdense2csr");
+		print("Failed to generate a chiseltest32.hex\n");
+		print("Please inspect ../picorv_c/c_chiseltest");
 		exit(1);
 	}
 }
@@ -50,22 +50,19 @@ $param{'c'} = 1;
 $path = `pwd`;
 chomp($path);
 print "INFO: Current directory: $path\n";
-$fw_path = "$path/../picorv_c/c_r2filterdense2csr";
+$fw_path = "$path/../picorv_c/c_chiseltest";
 $param{'firmware_path'} = $fw_path;
 #                  pico                chiseltest
-@pico_program  = ('r2filterdense2csr32.hex', 'dummy32.hex');
+@pico_program  = ('chiseltest32.hex', 'dummy32.hex');
 
 #- Simulation Time
-$param{'sim_loop'}     = 600;
+$param{'sim_loop'}     = 150;
 
 #- Checkers
 @checkers = ('check_pico_chiseltest.sh');
 
 #- Running with Icarus
-#$param{'vivado'} = 1;  
-#$param{'vivado_project'} = 1;
 $param{'run_sim'} = 1;
-
 
 ###########################################
 #- Generate: Do not modify

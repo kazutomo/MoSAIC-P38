@@ -12,10 +12,10 @@ targetfn = targetpath
 print(f"file: {targetfn}")
 
 startmarker='c0debaad'
-counting=False # True after the start marker
-count=0
-
+startmarkernotfound=True
+capturing=False # True after the start marker
 outputbuffer = []
+maxbuflen = 64
 
 with open(targetfn) as f:
     while True:
@@ -25,19 +25,28 @@ with open(targetfn) as f:
         l = l.rstrip()
         if l.find('//') == 0:
             continue
-        if l.find('c0debaad') != -1:
-            counting = True
+        if l.find(startmarker) != -1:
+            startmarkernotfound=False
+            capturing = True
         elif l.find('deadbeef') != -1:
-            # check count
-            if count != 8:
-                print(f'Warning: count should 8, but {count}')
-            counting = False
-        elif counting == True:
-            count += 1
-            outputbuffer.append(int(l, 16))
+            capturing = False
+        elif capturing == True:
+            if len(outputbuffer) > maxbuflen:
+                capturing = False
+            else:
+                try:
+                    outputbuffer.append(int(l, 16))
+                except ValueError:
+                    print("invalid number!")
 
-for i in range(0,count):
-    print(f'{outputbuffer[i]:016x}')
+print("\n[Results]")
+addr = 0
+for b in outputbuffer:
+    print(f'{addr:08X} {b:08X}')
+    addr += 4
+print()
 
-print("INFO: Dummy")
-print("SUCCESS: pass dummy")
+if startmarkernotfound:
+    print("FAIL: no start marker")
+else:
+    print("SUCCESS: pass dummy")

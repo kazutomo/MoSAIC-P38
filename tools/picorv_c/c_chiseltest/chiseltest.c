@@ -9,6 +9,7 @@
 #include "mq.h"
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #define CMD_INVALID     0
 #define CMD_LAUNCH      0x20000000
@@ -25,8 +26,12 @@ static uint32_t mkR2Packet(uint32_t cmd, uint32_t addr, uint32_t data) {
   return ret;
 }
 
-static volatile char debugbuf[40] =
-  {0xad, 0xba, 0xde, 0xc0,   // c0debaad
+
+#define DEBUGBUFSZ (400)
+
+static volatile char debugbuf[DEBUGBUFSZ] = {0xad, 0xba, 0xde, 0xc0};   // c0debaad
+/*
+{0xad, 0xba, 0xde, 0xc0,   // c0debaad
    0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00,
@@ -36,6 +41,7 @@ static volatile char debugbuf[40] =
    0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00,
    0xef, 0xbe, 0xad, 0xde};  // deadbeef
+*/
 
 volatile uint32_t *dbptr = (uint32_t*)debugbuf;
 static int dbptr_offset = 1;
@@ -134,6 +140,8 @@ uint32_t main (int argc, char *argv[])
   int entryUip = 0x4000;
   int validated = 1;
 
+  //initdebugbuf();
+
   local_tile_id = atoi(argv[1]);
 
   if (local_tile_id == 0) {
@@ -150,13 +158,17 @@ uint32_t main (int argc, char *argv[])
 	// readout the result from R2's local memory
 	for (i=0; i<ndata; i++) {
 	  int res = R2ReadMem(i*8 + outputaddr);
+	  dbptr[dbptr_offset++] = res;
+
 	  int ref = 0;
 	  if (data[i] >= threshold) ref = data[i]; else ref = 0;
 	  if (res != ref) validated = 0;
 	}
 
-	if(validated) dbptr[dbptr_offset++] = 0xcafe0000; // validated
+	if(validated) dbptr[dbptr_offset++] = 0xcafe0000 + ndata; // validated
 	else          dbptr[dbptr_offset++] = 0xbad00000; // failed to validate
+
+	dbptr[dbptr_offset++] = 0xdeadbeef;
   }
 
   return 1;
