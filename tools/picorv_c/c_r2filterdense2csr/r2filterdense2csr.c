@@ -123,8 +123,8 @@ uint32_t main (int argc, char *argv[])
   
   int ndata = sizeof(data)/sizeof(int);
   int startaddr = 0;
-  int outputaddr = startaddr + (ndata + 2) * 8; // +2 is header
   int maxsbp = (ndata + 2 + 1) * 8; // +2 is header +1 exelusive
+  int outputaddr = (ndata + 2) * 8; // +2 is header
 
   int entryUip = 0x4000;
   int validated = 1;
