@@ -8,8 +8,6 @@ genhex() {
 }
 
 genhex snappydecomp
-
-exit 0
 genhex filter
 genhex filterdense2csr
 

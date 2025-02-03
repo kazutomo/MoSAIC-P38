@@ -117,6 +117,7 @@ def conv2mem(f, start_of_program, start_of_data):
             instarray[idx] = inst
             addr += 4
 
+    # print("@00000000")
     for i in range(0,nelems//2):
         print(f"{instarray[i*2+1]:08x}{instarray[i*2]:08x}")
             
