@@ -30,7 +30,7 @@ OC = $(RISCV_TOOLS_PREFIX)objcopy
 LDFLAGS = -Wl,--gc-sections
 LDLIBS = -lstdc++
 
-SRC_FNAME = r2snappy
+SRC_FNAME = r2snappydecomp
 
 $(SRC_FNAME).hex: $(SRC_FNAME).elf start.elf
 	$(OC) -O verilog start.elf start.tmp
@@ -53,7 +53,7 @@ clean:
 	rm -rf *.o *.d *.elf start.elf *.map *.bin *.dissasembled *.readelf *.h.gch *.tmp 
 
 clean_all: clean
-	rm -rf *32.hex
+	rm -rf *.hex
 
 .PHONY: test clean clean_all
 
