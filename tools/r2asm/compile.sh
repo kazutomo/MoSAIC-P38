@@ -10,4 +10,5 @@ genhex() {
 genhex snappydecomp
 genhex filter
 genhex filterdense2csr
+genhex r2test
 

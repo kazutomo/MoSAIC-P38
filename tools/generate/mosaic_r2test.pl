@@ -25,15 +25,16 @@ use POSIX;
 # 	}
 # }
 
-my $hexfn = "../picorv_c/c_chiseltest/chiseltest32.hex";
-if (! -e $hexfn) {
-	my $ret = system("make -C ../picorv_c/c_chiseltest");
-	if ($ret != 0 || ! -e $hexfn) {
-		print("Failed to generate a chiseltest32.hex\n");
-		print("Please inspect ../picorv_c/c_chiseltest");
-		exit(1);
-	}
-}
+#my $hexfn = "../picorv_c/c_chiseltest/chiseltest32.hex";
+my $hexfn = "../picorv_c/c_r2test/r2test32.hex";
+# if (! -e $hexfn) {
+# 	my $ret = system("make -C ../picorv_c/c_chiseltest");
+# 	if ($ret != 0 || ! -e $hexfn) {
+# 		print("Failed to generate a chiseltest32.hex\n");
+# 		print("Please inspect ../picorv_c/c_chiseltest");
+# 		exit(1);
+# 	}
+# }
 
 
 %new_tile;
@@ -50,10 +51,13 @@ $param{'c'} = 1;
 $path = `pwd`;
 chomp($path);
 print "INFO: Current directory: $path\n";
-$fw_path = "$path/../picorv_c/c_chiseltest";
+#$fw_path = "$path/../picorv_c/c_chiseltest";
+$fw_path = "$path/../picorv_c/c_r2test";
+
 $param{'firmware_path'} = $fw_path;
 #                  pico                chiseltest
-@pico_program  = ('chiseltest32.hex', 'dummy32.hex');
+#@pico_program  = ('chiseltest32.hex', 'dummy32.hex');
+@pico_program  = ('r2test32.hex', 'dummy32.hex');
 
 #- Simulation Time
 $param{'sim_loop'}     = 150;
